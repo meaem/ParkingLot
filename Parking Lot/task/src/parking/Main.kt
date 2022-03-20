@@ -38,6 +38,17 @@ class ParkingLot() {
         return c!!
     }
 
+    fun getStatus(): List<Pair<Int, Car>> {
+        checkInitialized()
+        return lots.mapIndexed { index, car -> index + 1 to car }
+            .filter { it.second != null }
+            .map { it.first to it.second!! }
+    }
+
+    fun getStatusByColor(color: String): List<Pair<Int, Car>> {
+        return getStatus().filter { it.second.color.equals(color, true) }
+    }
+
     private fun getFirstFreeLot(): Int {
         checkInitialized()
         for (l in lots.indices) {
@@ -46,17 +57,16 @@ class ParkingLot() {
         return -1
     }
 
-    fun getStatus(): List<Pair<Int, Car>> {
-        checkInitialized()
-        return lots.mapIndexed { index, car -> index + 1 to car }
-            .filter { it.second != null }
-            .map { it.first to it.second!! }
-    }
 
     private fun checkInitialized() {
         if (lots.isEmpty()) {
             throw IllegalArgumentException("Sorry, a parking lot has not been created.")
         }
+    }
+
+    fun getStatusByLicence(licence: String): Pair<Int, Car>? {
+        return getStatus().firstOrNull { it.second.licenceNo.equals(licence, true) }
+
     }
 }
 
@@ -75,8 +85,8 @@ fun main() {
                 println("$colr car parked in spot $freeLot.")
             } else if (tokens.size == 2 && tokens[0] == "leave") {
                 val position = tokens[1].toInt()
-                    parking.leave(position)
-                    println("Spot $position is free.")
+                parking.leave(position)
+                println("Spot $position is free.")
             } else if (tokens.size == 2 && tokens[0] == "create") {
                 val capacity = tokens[1].toInt()
                 if (parking.initLot(capacity)) {
@@ -91,12 +101,33 @@ fun main() {
                 } else {
                     println("Parking lot is empty.")
                 }
+            } else if (tokens[0] == "reg_by_color") {
+                val status = parking.getStatusByColor(tokens[1])
+                if (status.isEmpty()) {
+                    println("No cars with color ${tokens[1]} were found.")
+                } else {
+                    println(status.map { it.second.licenceNo }.joinToString(", "))
+                }
+            }else if (tokens[0] == "spot_by_color") {
+                val status = parking.getStatusByColor(tokens[1])
+                if (status.isEmpty()) {
+                    println("No cars with color ${tokens[1]} were found.")
+                } else {
+                    println(status.map { it.first }.joinToString(", "))
+                }
+            }else if (tokens[0] == "spot_by_reg") {
+                val status = parking.getStatusByLicence(tokens[1])
+                if (status==null) {
+                    println("No cars with registration number ${tokens[1]} were found.")
+                } else {
+                    println(status.first)
+                }
             } else if (tokens[0] == "exit") {
                 break
             } else {
                 println("Invalid command.")
             }
-        } catch (ex:IllegalArgumentException) {
+        } catch (ex: IllegalArgumentException) {
             println(ex.message)
         }
         cmd = readln()
